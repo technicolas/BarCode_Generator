@@ -5,7 +5,7 @@
 # Programme créé pour le service "Archives" dans le
 # but de solutionner le problème de Sept 2026
 # (solution de contournement à utiliser en cas de besoin)
-# ZANDARIN Nicolas - 12 septembre 2026
+# Moi - 12 septembre 2026
 # ------------------------------------------------------------
 
 import os
@@ -79,8 +79,7 @@ def generate_barcode_image(data: str, filename: str):
         "module_width": 0.30,
         "quiet_zone": 2.0,
         "font_size": 0,
-        "text_distance": 1,
-    })
+        "text_distance": 1,})
     return filename + ".png"
 
 def draw_delimiter(c: canvas.Canvas, y: float):
