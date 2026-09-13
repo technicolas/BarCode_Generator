@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# BUT DU PROGRAMMME ------------------------------------------
-# Programme créé pour le service "Archives" dans le
-# but de solutionner le problème de Sept 2026
-# (solution de contournement à utiliser en cas de besoin)
-# Moi - 12 septembre 2026
+# ------------------------------------------------------------
+# Programme permettant de générer                            |
+# des PDF de séries de barcodes                              |
+#                                 Nicolas - 12.09.2026       |
 # ------------------------------------------------------------
 
 import os
@@ -27,26 +26,27 @@ from PIL import Image
 # pyinstaller --noconsole --onefile --add-data "barcode.conf;." barcode_gui.py --icon=icone.ico (transforme le .py en .exe)
 # ------------------------------------------------------------
 
-# INFORMATIONS PROGRAMME -------------------------------------
+# Infos programme: -------------------------------------------
 # ------------------------------------------------------------
+
 PROGRAM_VERSION = "1.00"
 PROGRAM_CODE_NAME = "Le sauveur"
 PROGRAM_DATE = "12/09/2026"
-PROGRAM_AUTHOR = "Moi"
-PROGRAM_AUTHOR_MAIL = "a@a.com"
-INFO_GOAL = "The program was created for DVZOE's FIDES department to resolve the issue from September 2026 (a workaround to be used if necessary)."
+PROGRAM_AUTHOR = "Nicolas"
+PROGRAM_AUTHOR_MAIL = "nico@las.be"
+INFO_GOAL = "The program was created for the FIDES department to resolve the issue from September 2026 (a workaround to be used if necessary)."
 
 CONFIG_FILE = "barcode.conf"
-# STRUCTURE DU FICHIER "barcode.conf" ------------------------
+
+# STRUCTURE DU FICHIER "barcode.conf": -----------------------
 # # Configuration par défaut
 #   pages=1000
 #   start=0001
 #   barcode_width_ratio=0.50
 # ------------------------------------------------------------
 
-# CHARGEMENT CONFIGURATION -----------------------------------
+# Chargement de la config' de base (fichier barcode.conf): ---
 # ------------------------------------------------------------
-
 def load_config():
     pages = 100
     start = 1
@@ -70,7 +70,7 @@ def load_config():
 
     return pages, start, ratio
 
-# FONCTIONS CODE-BARRES --------------------------------------
+# Fonctions liées à la création du codebar: ------------------
 # ------------------------------------------------------------
 def generate_barcode_image(data: str, filename: str):
     barcode = Code128(data, writer=ImageWriter())
@@ -94,10 +94,13 @@ def draw_delimiter(c: canvas.Canvas, y: float):
 def add_centered_barcode(c: canvas.Canvas, img_path: str, text: str, ratio: float):
     img = Image.open(img_path)
     w, h = img.size
+
     final_width = A4[0] * ratio
     scale_factor = final_width / (w * 0.75)
+
     w_pt = w * 0.75 * scale_factor
     h_pt = h * 0.75 * scale_factor
+
     x = (A4[0] - w_pt) / 2
     y = (A4[1] - h_pt) / 2
 
@@ -105,12 +108,13 @@ def add_centered_barcode(c: canvas.Canvas, img_path: str, text: str, ratio: floa
     c.setFont("Helvetica", 20)
     c.drawCentredString(A4[0] / 2, y - 15, text)
 
-# GÉNÉRATION PDF AVEC BARRE DE PROGRESSION -------------------
+# Génération du PDF + barre de progression -------------------
 # ------------------------------------------------------------
 def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_label, root):
     first_num = f"{start_number:04d}"
     last_num = f"{start_number + pages - 1:04d}"
     pdf_name = f"CodeBar_{date_inv}_[{first_num}-{last_num}].pdf"
+
     pdf = canvas.Canvas(pdf_name, pagesize=A4)
 
     progress_bar["maximum"] = pages
@@ -119,6 +123,7 @@ def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_labe
     for i in range(pages):
         num = f"{start_number + i:04d}"
         text = f"{date_inv} / {num}"
+
         img_path = generate_barcode_image(text, f"barcode_{num}")
 
         draw_delimiter(pdf, A4[1] - 20 * mm)
@@ -134,7 +139,7 @@ def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_labe
     pdf.save()
     status_label.config(text=f"Generated PDF : {pdf_name}")
 
-# FENÊTRE "À propos" -----------------------------------------
+# Onglet infos -----------------------------------------------
 # ------------------------------------------------------------
 def show_about():
     messagebox.showinfo(
@@ -151,34 +156,38 @@ def show_goal():
         "Goal",
         f"{INFO_GOAL}\n")
 
-# INTERFACE TKINTER ------------------------------------------
+# Interface avec TKINTER -------------------------------------
 # ------------------------------------------------------------
 def main_gui():
     pages_default, start_default, ratio_default = load_config()
+
     today = datetime.date.today()
     default_date_inv = today.strftime("%Y%m%d")
+
     root = tk.Tk()
     root.title("FIDES - A4 barcode generator")
     # root.configure(bg="#1E3A8A")
-
-    # Menu ---------------------------------------------------
+    
+    # Menu
     menubar = tk.Menu(root)
     root.config(menu=menubar)
+
     menu_info = tk.Menu(menubar, tearoff=0)
     menu_info.add_command(label="Goal", command=show_goal)
     menu_info.add_command(label="About", command=show_about)
     menubar.add_cascade(label="Informations", menu=menu_info)
+
     frame = ttk.Frame(root, padding=20)
     #frame = tk.Frame(root, bg="#E0F1A1", padx=20, pady=20)
     frame.grid()
 
-    # Champs -------------------------------------------------
+    # Champs
     ttk.Label(frame, text="Reversed date :").grid(column=0, row=0, sticky="w")
     date_entry = ttk.Entry(frame)
     date_entry.insert(0, default_date_inv)
     date_entry.grid(column=1, row=0)
 
-    ttk.Label(frame, text="Number of pages :").grid(column=0, row=1, sticky="w")
+    ttk.Label(frame, text="Number of pages to print :").grid(column=0, row=1, sticky="w")
     pages_entry = ttk.Entry(frame)
     pages_entry.insert(0, str(pages_default))
     pages_entry.grid(column=1, row=1)
@@ -188,7 +197,7 @@ def main_gui():
     start_entry.insert(0, f"{start_default:04d}")
     start_entry.grid(column=1, row=2)
 
-    # Barre de progression -----------------------------------
+    # Barre de progression
     progress_bar = ttk.Progressbar(frame, length=250)
     progress_bar.grid(column=0, row=4, columnspan=2, pady=10)
 
@@ -206,7 +215,7 @@ def main_gui():
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    # Bouton Générer PDF -------------------------------------
+    # Bouton Générer PDF
     generate_button = tk.Button(
         frame,
         text="Generate PDF",
@@ -217,7 +226,7 @@ def main_gui():
         command=on_generate)
     generate_button.grid(column=0, row=3, columnspan=2, pady=10)
 
-    # Bouton Sortir ------------------------------------------
+    # Bouton Sortir
     exit_button = tk.Button(
         frame,
         text=" >> Exit << ",
