@@ -23,7 +23,8 @@ from PIL import Image
 # python.exe -m pip install --upgrade pip
 # pip install pillow reportlab python-barcode
 # pip install pyinstaller (pour transformer le .py en .exe)
-# pyinstaller --noconsole --onefile --add-data "barcode.conf;." barcode_gui.py --icon=icone.ico (transforme le .py en .exe)
+# pyinstaller --noconsole --onefile --add-data "barcode.conf;." barcode_gui.py  (transforme le .py en .exe)
+
 # ------------------------------------------------------------
 
 # Infos programme:
@@ -33,7 +34,7 @@ PROGRAM_CODE_NAME = "Le sauveur"
 PROGRAM_DATE = "12/09/2026"
 PROGRAM_AUTHOR = "Nicolas"
 PROGRAM_AUTHOR_MAIL = "info@nico.las"
-INFO_GOAL = "The program was created for FIDES department to resolve the issue from September 2026 (a workaround to be used if necessary)."
+INFO_GOAL = "The program was created for ARCHIVES department to resolve the issue from September 2026 (a workaround to be used if necessary)."
 
 CONFIG_FILE = "barcode.conf"
 # STRUCTURE DU FICHIER "barcode.conf":
@@ -46,7 +47,7 @@ CONFIG_FILE = "barcode.conf"
 # Chargement de la config' de base (fichier barcode.conf):
 # ------------------------------------------------------------
 def load_config():
-    pages = 100
+    pages = 500
     start = 1
     ratio = 0.50
 
