@@ -9,6 +9,7 @@
 
 import os
 import datetime
+import re
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -29,9 +30,9 @@ from PIL import Image
 
 # Infos programme:
 # ------------------------------------------------------------
-PROGRAM_VERSION = "1.00"
+PROGRAM_VERSION = "1.01"                     # Ajout des slashs dans la date
 PROGRAM_CODE_NAME = "Le sauveur"
-PROGRAM_DATE = "12/09/2026"
+PROGRAM_DATE = "23/09/2026"
 PROGRAM_AUTHOR = "Nicolas"
 PROGRAM_AUTHOR_MAIL = "info@nico.las"
 INFO_GOAL = "The program was created for ARCHIVES department to resolve the issue from September 2026 (a workaround to be used if necessary)."
@@ -107,12 +108,32 @@ def add_centered_barcode(c: canvas.Canvas, img_path: str, text: str, ratio: floa
     c.setFont("Helvetica", 20)
     c.drawCentredString(A4[0] / 2, y - 15, text)
 
+# Normalisation de la date d'inventaire
+# ------------------------------------------------------------
+def normalize_date_inv(date_inv: str) -> str:
+    """
+    Accepte YYYYMMDD ou YYYY/MM/DD ou déjà formaté.
+    Retourne YYYY/MM/DD si possible, sinon renvoie la chaîne telle quelle.
+    """
+    s = date_inv.strip()
+    # Si format sans séparateurs et 8 chiffres, convertir
+    if re.fullmatch(r"\d{8}", s):
+        return f"{s[0:4]}/{s[4:6]}/{s[6:8]}"
+    # Si déjà au format YYYY/MM/DD (ou similaire), tenter d'extraire chiffres
+    digits = re.sub(r"\D", "", s)
+    if len(digits) == 8:
+        return f"{digits[0:4]}/{digits[4:6]}/{digits[6:8]}"
+    # Sinon, renvoyer tel quel (l'utilisateur assume la responsabilité)
+    return s
+
 # Génération du PDF + barre de progression:
 # ------------------------------------------------------------
 def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_label, root):
+    # date_inv doit être au format affichage (YYYY/MM/DD), mais pour le nom de fichier on enlève les slashs
+    safe_date = date_inv.replace("/", "")
     first_num = f"{start_number:04d}"
     last_num = f"{start_number + pages - 1:04d}"
-    pdf_name = f"CodeBar_{date_inv}_[{first_num}-{last_num}].pdf"
+    pdf_name = f"CodeBar_{safe_date}_[{first_num}-{last_num}].pdf"
 
     pdf = canvas.Canvas(pdf_name, pagesize=A4)
 
@@ -121,6 +142,7 @@ def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_labe
 
     for i in range(pages):
         num = f"{start_number + i:04d}"
+        # Texte encodé dans le barcode : date au format YYYY/MM/DD suivi du numéro
         text = f"{date_inv} / {num}"
 
         img_path = generate_barcode_image(text, f"barcode_{num}")
@@ -130,7 +152,10 @@ def generate_pdf(date_inv, pages, start_number, ratio, progress_bar, status_labe
         draw_delimiter(pdf, 20 * mm)
 
         pdf.showPage()
-        os.remove(img_path)
+        try:
+            os.remove(img_path)
+        except OSError:
+            pass
 
         progress_bar["value"] = i + 1
         root.update_idletasks()
@@ -161,7 +186,8 @@ def main_gui():
     pages_default, start_default, ratio_default = load_config()
 
     today = datetime.date.today()
-    default_date_inv = today.strftime("%Y%m%d")
+    # Par défaut on affiche la date avec des slashs
+    default_date_inv = today.strftime("%Y/%m/%d")
 
     fen = tk.Tk()
     fen.title("FIDES - A4 barcode generator")
@@ -182,7 +208,7 @@ def main_gui():
     frame.grid()
 
     # Champs:
-    # -------
+    # ------------------------------------------------------------
     ttk.Label(frame, text="Reversed date :").grid(column=0, row=0, sticky="w")
     date_entry = ttk.Entry(frame)
     date_entry.insert(0, default_date_inv)
@@ -199,7 +225,7 @@ def main_gui():
     start_entry.grid(column=1, row=2)
 
     # Barre de progression:
-    # ---------------------
+    # ------------------------------------------------------------
     progress_bar = ttk.Progressbar(frame, length=300)
     progress_bar.grid(column=0, row=4, columnspan=2, pady=10)
 
@@ -208,7 +234,8 @@ def main_gui():
 
     def on_generate():
         try:
-            date_inv = date_entry.get().strip()
+            raw_date = date_entry.get().strip()
+            date_inv = normalize_date_inv(raw_date)
             pages = int(pages_entry.get().strip())
             start_number = int(start_entry.get().strip())
             ratio = ratio_default
@@ -218,6 +245,7 @@ def main_gui():
             messagebox.showerror("Error", str(e))
 
     # Bouton Générer PDF:
+    # ------------------------------------------------------------
     generate_button = tk.Button(
         frame,
         text="Generate PDF",
@@ -229,6 +257,7 @@ def main_gui():
     generate_button.grid(column=0, row=3, columnspan=2, pady=10)
 
     # Bouton Sortir:
+    # ------------------------------------------------------------
     exit_button = tk.Button(
         frame,
         text=" >> Exit << ",
