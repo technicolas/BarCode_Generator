@@ -24,7 +24,7 @@ from PIL import Image
 # python.exe -m pip install --upgrade pip
 # pip install pillow reportlab python-barcode
 # pip install pyinstaller (pour transformer le .py en .exe)
-# pyinstaller --noconsole --onefile --add-data "barcode.conf;." barcode_gui.py  (transforme le .py en .exe)
+# pyinstaller --noconsole --onefile --add-data "barcode.conf;." barcodeFIDES.py  (transforme le .py en .exe)
 
 # ------------------------------------------------------------
 
